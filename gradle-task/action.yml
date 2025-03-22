@@ -43,6 +43,8 @@ runs:
 
     -   name: "Fetch source"
         uses: actions/checkout@v4
+        with:
+            set-safe-directory: false
 
     -   name:  "Create wrapper"
         shell: pwsh
