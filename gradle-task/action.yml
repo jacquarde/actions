@@ -5,10 +5,17 @@ name: "Run Gradle task"
 
 
 inputs:
-    task:
-        description: "Task to be run by Gradle"
+    tasks:
+        description: "Tasks to be run by Gradle"
         required:    true
-        default:     build
+    disable-build-cache:
+        description: "Use build cache"
+        required:    false
+        default:     ''
+    disable-daemon:
+        description: "Run with daemon"
+        required:    false
+        default:     ''
 
 outputs:
     project-group:
@@ -70,8 +77,11 @@ runs:
 
     -   name:  "Build with Gradle wrapper"
         shell: pwsh
+        env:
+            JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
+            JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
         run:   |
-               ./gradlew ${{inputs.task}}
+               ./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
 
     -   name: "Upload build reports"
         uses: actions/upload-artifact@v4
