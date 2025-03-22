@@ -12,14 +12,14 @@ inputs:
 
 outputs:
     project-group:
-        description: "Group of the build artifact"
+        description: "Group of the project"
         value:       ${{steps.properties.outputs.group}}
     project-name:
-        description: "Name of the build artifact"
+        description: "Name of the project"
         value:       ${{steps.properties.outputs.name}}
     project-version:
-        description: "Version of the build artifact"
-        value:       ${{steps.properties.outputs.versio}}
+        description: "Version of the project"
+        value:       ${{steps.properties.outputs.version}}
 
 
 runs:
@@ -34,12 +34,12 @@ runs:
 
     -   name:  "Create wrapper"
         shell: pwsh
-        run:   gradle wrapper
+        run:   gradle wrapper --no-scan
 
     -   name: "Validate wrapper"
         uses: gradle/actions/wrapper-validation@v4
 
-    -   name:  Extract properties
+    -   name:  "Extract properties"
         id:    properties
         shell: pwsh
         run:   |
