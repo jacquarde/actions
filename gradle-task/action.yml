@@ -52,8 +52,8 @@ runs:
     -   name:  "Extract properties"
         id:    properties
         shell: pwsh
-#        env:
-#            GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
+        env:
+            GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
         run:   |
                Invoke-Expression -Command ".\gradlew properties -q --console=plain" `
                       | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
