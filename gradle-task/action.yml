@@ -11,9 +11,15 @@ inputs:
         default:     build
 
 outputs:
-    properties:
+    project-group:
+        description: "Group of the build artifact"
+        value:       ${{steps.properties.outputs.group}}
+    project-name:
         description: "Name of the build artifact"
-        value:       ${{steps.properties.outputs}}
+        value:       ${{steps.properties.outputs.name}}
+    project-version:
+        description: "Version of the build artifact"
+        value:       ${{steps.properties.outputs.versio}}
 
 
 runs:
