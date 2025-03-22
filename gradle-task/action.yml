@@ -35,16 +35,10 @@ runs:
     using: "composite"
     steps:
 
-#    -   name:  "Fetch source"
-#        shell: pwsh
-#        run:   gh repo clone ${{github.repository}} . -- --branch ${{github.ref_name}} --depth 1
-#        env:
-#            GH_TOKEN: ${{github.token}}
-
     -   name: "Fetch source"
         uses: actions/checkout@v4
         with:
-            set-safe-directory: false
+            set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
 
     -   name:  "Create wrapper"
         shell: pwsh
@@ -58,8 +52,8 @@ runs:
     -   name:  "Extract properties"
         id:    properties
         shell: pwsh
-        env:
-            GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
+#        env:
+#            GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
         run:   |
                Invoke-Expression -Command ".\gradlew properties -q --console=plain" `
                       | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
