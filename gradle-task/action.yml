@@ -1,0 +1,69 @@
+# Copyright (c) 2025 jacquarde
+
+
+name: "Run Gradle task"
+
+
+inputs:
+    task:
+        description: "Task to be run by Gradle"
+        required:    true
+        default:     build
+
+outputs:
+    properties:
+        description: "Name of the build artifact"
+        value:       ${{steps.properties.outputs}}
+
+
+runs:
+    using: "composite"
+    steps:
+
+    -   name: "Fetch source"
+        uses: actions/checkout@v4
+
+    -   name:  "Create wrapper"
+        shell: pwsh
+        run:   gradle wrapper
+
+    -   name: "Validate wrapper"
+        uses: gradle/actions/wrapper-validation@v4
+
+    -   name:  Extract properties
+        id:    properties
+        shell: pwsh
+        run:   |
+               Invoke-Expression -Command ".\gradlew properties -q --console=plain" `
+                      | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
+                      | ForEach-Object -Process {
+                   "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
+               }
+
+    -   name: "Setup Gradle"
+        uses: gradle/actions/setup-gradle@v4
+        with:
+            validate-wrappers:                    false
+            cache-disabled:                       true
+            dependency-graph:                     generate-and-submit
+            dependency-graph-continue-on-failure: false
+            build-scan-publish:                   true
+            build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
+            build-scan-terms-of-use-agree:        "yes"
+            develocity-injection-enabled:         true
+            develocity-url:                       "https://scans.gradle.com"
+            develocity-plugin-version:            3.19.2
+
+    -   name:  "Build with Gradle wrapper"
+        shell: pwsh
+        run:   |
+               ./gradlew ${{inputs.task}}
+
+    -   name: "Upload build reports"
+        uses: actions/upload-artifact@v4
+        if:   always()
+        with:
+            name:              build-reports
+            if-no-files-found: warn
+            # noinspection YAMLUnresolvedAlias
+            path:              '**/build/reports/'
