@@ -3,6 +3,8 @@
 
 name: "Run Gradle task"
 
+#permissions:
+#    contents: read
 
 inputs:
     tasks:
@@ -33,11 +35,14 @@ runs:
     using: "composite"
     steps:
 
-    -   name:  "Fetch source"
-        shell: pwsh
-        run:   gh repo clone ${{github.repository}} . -- --branch ${{github.ref_name}} --depth 1
-        env:
-            GH_TOKEN: ${{github.token}}
+#    -   name:  "Fetch source"
+#        shell: pwsh
+#        run:   gh repo clone ${{github.repository}} . -- --branch ${{github.ref_name}} --depth 1
+#        env:
+#            GH_TOKEN: ${{github.token}}
+
+    -   name: "Fetch source"
+        uses: actions/checkout@v4
 
     -   name:  "Create wrapper"
         shell: pwsh
