@@ -51,7 +51,7 @@ runs:
                 build-scan-publish:                   true
                 build-scan-terms-of-use-agree:        "yes"
                 build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
-                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+                cache-disabled:                       ${{inputs.uses-caches && true || false}}
                 dependency-graph-continue-on-failure: false
                 dependency-graph:                     generate-and-submit
                 develocity-injection-enabled:         true
@@ -65,7 +65,7 @@ runs:
             env:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
             run:   |
-                   Invoke-Expression -Command "gradle properties -q --console=plain" `
+                   Invoke-Expression -Command "./gradlew properties -q --console=plain" `
                           | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
                           | ForEach-Object -Process {
                        "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
@@ -77,7 +77,7 @@ runs:
                 JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
                 JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
             run:   |
-                   gradle ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
+                   ./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
 
         -   name: "Upload build reports"
             uses: actions/upload-artifact@v4
