@@ -13,11 +13,15 @@ inputs:
     disable-build-cache:
         description: "Use build cache"
         required:    false
-        default:     ''
+        default:     'true'
     disable-daemon:
         description: "Run with daemon"
         required:    false
         default:     ''
+    uses-caches:
+        description: "Use GitHub cache"
+        required:    false
+        default:     'true'
 
 outputs:
     project-group:
@@ -35,59 +39,50 @@ runs:
     using: "composite"
     steps:
 
-    -   name: "Fetch source"
-        uses: actions/checkout@v4
-        with:
-            set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
+        -   name: "Fetch source"
+            uses: actions/checkout@v4
+            with:
+                set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
 
-    -   name:  "Create wrapper"
-        shell: pwsh
-        env:
-            GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
-        run:   gradle wrapper --no-scan
+        -   name: "Setup Gradle"
+            uses: gradle/actions/setup-gradle@v4
+            with:
+                add-job-summary-as-pr-comment:        on-failure
+                build-scan-publish:                   true
+                build-scan-terms-of-use-agree:        "yes"
+                build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
+                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+                dependency-graph-continue-on-failure: false
+                dependency-graph:                     generate-and-submit
+                develocity-injection-enabled:         true
+                develocity-plugin-version:            3.19.2
+                develocity-url:                       "https://scans.gradle.com"
+                gradle-version:                       wrapper
 
-    -   name: "Validate wrapper"
-        uses: gradle/actions/wrapper-validation@v4
+        -   name:  "Extract properties"
+            id:    properties
+            shell: pwsh
+            env:
+                GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
+            run:   |
+                   Invoke-Expression -Command "gradle properties -q --console=plain" `
+                          | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
+                          | ForEach-Object -Process {
+                       "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
+                   }
 
-    -   name:  "Extract properties"
-        id:    properties
-        shell: pwsh
-        env:
-            GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
-        run:   |
-               Invoke-Expression -Command ".\gradlew properties -q --console=plain" `
-                      | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
-                      | ForEach-Object -Process {
-                   "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
-               }
+        -   name:  "Build Gradle tasks"
+            shell: pwsh
+            env:
+                JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
+                JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
+            run:   |
+                   gradle ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
 
-    -   name: "Setup Gradle"
-        uses: gradle/actions/setup-gradle@v4
-        with:
-            add-job-summary-as-pr-comment:        on-failure
-            build-scan-publish:                   true
-            build-scan-terms-of-use-agree:        "yes"
-            build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
-            cache-disabled:                       true
-            dependency-graph-continue-on-failure: false
-            dependency-graph:                     generate-and-submit
-            develocity-injection-enabled:         true
-            develocity-plugin-version:            3.19.2
-            develocity-url:                       "https://scans.gradle.com"
-            validate-wrappers:                    false
-
-    -   name:  "Build with Gradle wrapper"
-        shell: pwsh
-        env:
-            JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
-            JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
-        run:   |
-               ./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
-
-    -   name: "Upload build reports"
-        uses: actions/upload-artifact@v4
-        if:   always()
-        with:
-            name:              build-reports
-            if-no-files-found: warn
-            path:              '**/build/reports/'
+        -   name: "Upload build reports"
+            uses: actions/upload-artifact@v4
+            if:   always()
+            with:
+                name:              build-reports
+                if-no-files-found: warn
+                path:              '**/build/reports/'
