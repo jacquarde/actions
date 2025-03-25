@@ -57,7 +57,7 @@ runs:
                 develocity-injection-enabled:         true
                 develocity-plugin-version:            3.19.2
                 develocity-url:                       "https://scans.gradle.com"
-                gradle-version:                       wrapper
+                gradle-version:                       current
 
         -   name:  "Extract properties"
             id:    properties
