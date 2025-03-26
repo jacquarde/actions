@@ -44,20 +44,20 @@ runs:
             with:
                 set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
 
-#        -   name: "Setup Gradle"
-#            uses: gradle/actions/setup-gradle@v4
-#            with:
-#                add-job-summary-as-pr-comment:        on-failure
-#                build-scan-publish:                   true
-#                build-scan-terms-of-use-agree:        "yes"
-#                build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
-##                cache-disabled:                       ${{inputs.uses-caches && false || true}}
-#                cache-read-only:                      false
-#                dependency-graph-continue-on-failure: false
-#                dependency-graph:                     generate-and-submit
-#                develocity-injection-enabled:         true
-#                develocity-plugin-version:            3.19.2
-#                develocity-url:                       "https://scans.gradle.com"
+        -   name: "Setup Gradle"
+            uses: gradle/actions/setup-gradle@v4
+            with:
+                add-job-summary-as-pr-comment:        on-failure
+                build-scan-publish:                   true
+                build-scan-terms-of-use-agree:        "yes"
+                build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
+                    #                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+                cache-read-only:                      false
+                dependency-graph-continue-on-failure: false
+                dependency-graph:                     generate-and-submit
+                develocity-injection-enabled:         true
+                develocity-plugin-version:            3.19.2
+                develocity-url:                       "https://scans.gradle.com"
 
         -   name:  "Generate wrapper"
             shell: pwsh
@@ -84,7 +84,8 @@ runs:
                 JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
                 JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
             run:   |
-                   Invoke-Expression -Command "./gradlew ${{inputs.tasks}} --info ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON} --console=plain"
+                   Invoke-Expression -Command `
+                   "./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON} --console=plain"
 
         -   name: "Upload build reports"
             uses: actions/upload-artifact@v4
