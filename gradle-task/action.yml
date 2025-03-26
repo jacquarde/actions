@@ -58,7 +58,7 @@ runs:
                 develocity-injection-enabled:         true
                 develocity-plugin-version:            3.19.2
                 develocity-url:                       "https://scans.gradle.com"
-                gradle-version:                       current
+                gradle-version:                       wrapper
 
         -   name:  "Extract properties"
             id:    properties
@@ -78,9 +78,6 @@ runs:
                 JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
                 JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
             run:   |
-                   Write-Output "::notice::JACQUARDE_DISABLE_BUILD_CACHE=${env:JACQUARDE_DISABLE_BUILD_CACHE}"
-                   Write-Output "::notice::JACQUARDE_DISABLE_DAEMON=${env:JACQUARDE_DISABLE_DAEMON}"
-                   Write-Output "::notice::GRADLE: ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}"
                    gradle ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
 
         -   name: "Upload build reports"
