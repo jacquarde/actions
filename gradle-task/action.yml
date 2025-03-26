@@ -78,6 +78,7 @@ runs:
                 JACQUARDE_DISABLE_BUILD_CACHE: ${{inputs.disable-build-cache && '--no-build-cache' || ''}}
                 JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
             run:   |
+                   Write-Error "::notice::gradel ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}"
                    gradle ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}
 
         -   name: "Upload build reports"
