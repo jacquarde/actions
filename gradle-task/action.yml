@@ -52,6 +52,7 @@ runs:
                 build-scan-terms-of-use-agree:        "yes"
                 build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
 #                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+                cache-read-only:                      false
                 dependency-graph-continue-on-failure: false
                 dependency-graph:                     generate-and-submit
                 develocity-injection-enabled:         true
