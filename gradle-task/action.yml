@@ -44,20 +44,20 @@ runs:
             with:
                 set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
 
-        -   name: "Setup Gradle"
-            uses: gradle/actions/setup-gradle@v4
-            with:
-                add-job-summary-as-pr-comment:        on-failure
-                build-scan-publish:                   true
-                build-scan-terms-of-use-agree:        "yes"
-                build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
-#                cache-disabled:                       ${{inputs.uses-caches && false || true}}
-                cache-read-only:                      false
-                dependency-graph-continue-on-failure: false
-                dependency-graph:                     generate-and-submit
-                develocity-injection-enabled:         true
-                develocity-plugin-version:            3.19.2
-                develocity-url:                       "https://scans.gradle.com"
+#        -   name: "Setup Gradle"
+#            uses: gradle/actions/setup-gradle@v4
+#            with:
+#                add-job-summary-as-pr-comment:        on-failure
+#                build-scan-publish:                   true
+#                build-scan-terms-of-use-agree:        "yes"
+#                build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
+##                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+#                cache-read-only:                      false
+#                dependency-graph-continue-on-failure: false
+#                dependency-graph:                     generate-and-submit
+#                develocity-injection-enabled:         true
+#                develocity-plugin-version:            3.19.2
+#                develocity-url:                       "https://scans.gradle.com"
 
         -   name:  "Generate wrapper"
             shell: pwsh
