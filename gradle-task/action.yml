@@ -22,6 +22,10 @@ inputs:
         description: "Use GitHub cache"
         required:    false
         default:     'true'
+    upload-build-report:
+        description: "Upload build report as an workflow artifact"
+        required:    false
+        default:     'true'
 
 outputs:
     project-group:
@@ -51,7 +55,7 @@ runs:
                 build-scan-publish:                   true
                 build-scan-terms-of-use-agree:        "yes"
                 build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
-                    #                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+                #                cache-disabled:                       ${{inputs.uses-caches && false || true}}
                 cache-read-only:                      false
                 dependency-graph-continue-on-failure: false
                 dependency-graph:                     generate-and-submit
@@ -60,19 +64,21 @@ runs:
                 develocity-url:                       "https://scans.gradle.com"
 
         -   name:  "Generate wrapper"
-            shell: pwsh
+            shell: bash
             env:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
+                GITHUB_DEPENDENCY_GRAPH_ENABLED: false
             run:   |
-                   gradle wrapper --console=plain
+                   gradle wrapper --no-scan
 
         -   name:  "Extract properties"
             id:    properties
             shell: pwsh
             env:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
+                GITHUB_DEPENDENCY_GRAPH_ENABLED: false
             run:   |
-                   Invoke-Expression -Command "./gradlew properties -quiet --console=plain" `
+                   Invoke-Expression -Command "./gradlew properties -quiet --console=plain --no-scan" `
                           | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
                           | ForEach-Object -Process {
                        "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
@@ -85,12 +91,12 @@ runs:
                 JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
             run:   |
                    Invoke-Expression -Command `
-                   "./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON} --console=plain"
+                   "./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}"
 
         -   name: "Upload build reports"
             uses: actions/upload-artifact@v4
-            if:   always()
+            if:   ${{inputs.upload-build-report}}
             with:
-                name:              build-reports
+                name:              build-reports_${{github.job}}
                 if-no-files-found: warn
                 path:              '**/build/reports/'
