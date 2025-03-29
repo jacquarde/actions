@@ -4,7 +4,7 @@
 name: "Run Gradle task"
 
 #permissions:
-#    contents: read
+#    contents: read  # actions/checkout
 
 inputs:
     tasks:
@@ -23,7 +23,7 @@ inputs:
         required:    false
         default:     'true'
     upload-build-report:
-        description: "Upload build report as an workflow artifact"
+        description: "Upload build report as a workflow artifact"
         required:    false
         default:     'true'
 
@@ -47,27 +47,16 @@ runs:
             uses: actions/checkout@v4
             with:
                 set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
+                sparse-checkout:    |
+                                    src
+                sparse-checkout-cone-mode: false
 
-        -   name: "Setup Gradle"
-            uses: gradle/actions/setup-gradle@v4
-            with:
-                add-job-summary-as-pr-comment:        on-failure
-                build-scan-publish:                   true
-                build-scan-terms-of-use-agree:        "yes"
-                build-scan-terms-of-use-url:          "https://gradle.com/terms-of-service"
-                #                cache-disabled:                       ${{inputs.uses-caches && false || true}}
-                cache-read-only:                      false
-                dependency-graph-continue-on-failure: false
-                dependency-graph:                     generate-and-submit
-                develocity-injection-enabled:         true
-                develocity-plugin-version:            3.19.2
-                develocity-url:                       "https://scans.gradle.com"
 
         -   name:  "Generate wrapper"
             shell: bash
             env:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
-                GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+                GITHUB_DEPENDENCY_GRAPH_ENABLED:          false
             run:   |
                    gradle wrapper --no-scan
 
@@ -76,13 +65,27 @@ runs:
             shell: pwsh
             env:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
-                GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+                GITHUB_DEPENDENCY_GRAPH_ENABLED:          false
             run:   |
                    Invoke-Expression -Command "./gradlew properties -quiet --console=plain --no-scan" `
                           | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
                           | ForEach-Object -Process {
                        "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
                    }
+
+
+        -   name: "Setup Gradle"
+            uses: gradle/actions/setup-gradle@v4
+            with:
+                add-job-summary-as-pr-comment: on-failure
+                build-scan-publish:            true
+                build-scan-terms-of-use-agree: "yes"
+                build-scan-terms-of-use-url:   "https://gradle.com/terms-of-service"
+                #                cache-disabled:                       ${{inputs.uses-caches && false || true}}
+                cache-read-only:               false
+                develocity-injection-enabled:  true
+                develocity-plugin-version:     3.19.2
+                develocity-url:                "https://scans.gradle.com"
 
         -   name:  "Build Gradle tasks"
             shell: pwsh
