@@ -1,4 +1,4 @@
-# Copyright (c) 2025 jacquarde
+# Copyright 2025 jacquarde
 
 
 name: "Run Gradle task"
@@ -23,9 +23,13 @@ inputs:
         required:    false
         default:     'true'
     upload-build-report:
-        description: "Upload build report as a workflow artifact"
+        description: "Upload build reports as a workflow artifact"
         required:    false
         default:     'true'
+    root-project-folder:
+        description: "Location of the root project folder. Must contain settings and build scripts. Defaults to workspace."
+        required:    false
+        default:     '.'
 
 outputs:
     project-group:
@@ -47,10 +51,6 @@ runs:
             uses: actions/checkout@v4
             with:
                 set-safe-directory: false # SEE: https://github.com/actions/checkout/issues/1388
-                sparse-checkout:    |
-                                    src
-                sparse-checkout-cone-mode: false
-
 
         -   name:  "Generate wrapper"
             shell: bash
@@ -58,7 +58,7 @@ runs:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
                 GITHUB_DEPENDENCY_GRAPH_ENABLED:          false
             run:   |
-                   gradle wrapper --no-scan
+                   gradle wrapper --project-dir ${{inputs.root-project-folder}} --no-scan
 
         -   name:  "Extract properties"
             id:    properties
@@ -67,12 +67,11 @@ runs:
                 GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: true
                 GITHUB_DEPENDENCY_GRAPH_ENABLED:          false
             run:   |
-                   Invoke-Expression -Command "./gradlew properties -quiet --console=plain --no-scan" `
+                   Invoke-Expression -Command "./gradlew properties -quiet --console=plain --no-scan --project-dir ${{inputs.root-project-folder}}" `
                           | Select-String -Pattern '^(.+?) ?: ?(.*)$' `
                           | ForEach-Object -Process {
                        "$( $_.Matches.Groups[1] )=$( $_.Matches.Groups[2] )" >> $env:GITHUB_OUTPUT
                    }
-
 
         -   name: "Setup Gradle"
             uses: gradle/actions/setup-gradle@v4
@@ -94,7 +93,7 @@ runs:
                 JACQUARDE_DISABLE_DAEMON:      ${{inputs.disable-daemon && '--no-daemon' || '' }}
             run:   |
                    Invoke-Expression -Command `
-                   "./gradlew ${{inputs.tasks}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}"
+                   "./gradlew ${{inputs.tasks}} --project-dir ${{inputs.root-project-folder}} ${env:JACQUARDE_DISABLE_BUILD_CACHE} ${env:JACQUARDE_DISABLE_DAEMON}"
 
         -   name: "Upload build reports"
             uses: actions/upload-artifact@v4
